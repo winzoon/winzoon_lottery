@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LIVE TARGET TRACKING SYSTEM</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'VT323', monospace;
+      background-color: #000;
+      color: #0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Live map background */
+    .map-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: url('loaction.png') no-repeat center center;
+      background-size: cover;
+      z-index: 0;
+      transition: all 1s ease-out;
+    }
+    
+    /* Target marker */
+    .target-marker {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: url('loaction.png') no-repeat;
+      transform: translate(-15px, -30px);
+      filter: drop-shadow(0 0 5px #f00);
+      animation: pulse 1s infinite;
+      z-index: 2;
+    }
+    
+    /* Movement path */
+    .target-path {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    
+    /* Hacking terminal effects */
+    .scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 255, 0, 0.03) 0%,
+        rgba(0, 255, 0, 0.08) 50%,
+        rgba(0, 255, 0, 0.03) 100%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 3;
+    }
+    
+    .card {
+      background: rgba(0, 15, 0, 0.3);
+      padding: 25px;
+      border: 1px solid #0f0;
+      border-radius: 0;
+      width: 400px;
+      box-shadow: 0 0 20px #0f0, 
+                  inset 0 0 15px #0f0;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(3px);
+      z-index: 4;
+    }
+    
+    .card-header {
+      border-bottom: 1px dashed #0f0;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .card img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 1px solid #0f0;
+      margin-right: 15px;
+      box-shadow: 0 0 10px #0f0;
+      filter: hue-rotate(90deg) contrast(120%);
+    }
+    
+    .card h2 {
+      margin: 0;
+      font-size: 24px;
+      text-shadow: 0 0 5px #0f0;
+      letter-spacing: 1px;
+    }
+    
+    .card h3 {
+      margin: 5px 0 0;
+      font-size: 18px;
+      color: #0f0;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 8px 15px;
+      font-size: 16px;
+    }
+    
+    .label {
+      color: #0f0;
+      text-align: right;
+      border-right: 1px solid #0f0;
+      padding-right: 10px;
+    }
+    
+    .value {
+      color: #fff;
+      word-break: break-all;
+    }
+    
+    .value.sensitive {
+      color: #f00;
+      animation: blink 1s infinite;
+    }
+    
+    .value.location {
+      color: #0ff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    
+    .live-data {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px dashed #0f0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .live-data h4 {
+      margin: 0 0 5px 0;
+      color: #0f0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .live-data h4::before {
+      content: '🟢';
+      margin-right: 8px;
+      animation: blink 2s infinite;
+    }
+    
+    .social-section {
+      margin-top: 20px;
+      border-top: 1px dashed #0f0;
+      padding-top: 15px;
+    }
+    
+    .social-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    
+    .social-links a {
+      color: #0f0;
+      text-decoration: none;
+      border: 1px solid #0f0;
+      padding: 3px 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .social-links a:hover {
+      background: #0f0;
+      color: #000;
+      box-shadow: 0 0 10px #0f0;
+    }
+    
+    .access-level {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #f00;
+      color: #fff;
+      padding: 2px 5px;
+      font-size: 12px;
+      animation: blink 2s infinite;
+    }
+    
+    .timestamp {
+      position: absolute;
+      bottom: 5px;
+      right: 10px;
+      font-size: 12px;
+      color: #0f0;
+    }
+    
+    .gps-coords {
+      position: absolute;
+      bottom: 5px;
+      left: 10px;
+      font-size: 12px;
+      color: #0ff;
+    }
+    
+    .signal {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 12px;
+    }
+    
+    .signal::before {
+      content: '🛰️';
+      margin-right: 5px;
+    }
+    
+    .battery {
+      position: absolute;
+      top: 10px;
+      left: 120px;
+      font-size: 12px;
+    }
+    
+    .battery::before {
+      content: '🔋';
+      margin-right: 5px;
+    }
+    
+    /* Animations */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: translate(-15px, -30px) scale(1); }
+      50% { transform: translate(-15px, -30px) scale(1.2); }
+    }
+    
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: #0f0;
+      margin-left: 3px;
+      animation: blink 1s infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="map-container" id="map"></div>
+  <div class="target-marker" id="targetMarker"></div>
+  <div class="target-path" id="targetPath"></div>
+  <div class="scanlines"></div>
+  
+  <div class="card">
+    <div class="access-level">LIVE TRACKING</div>
+    <div class="signal">GPS ACTIVE</div>
+    <div class="battery">87%</div>
+    
+    <div class="card-header">
+      <img src="https://i.ibb.co/8dtK9gD/hacker-pfp.png" alt="Target Photo">
+      <div>
+        <h2>Kamini Javeed<span class="cursor"></span></h2>
+        <h3>aka "Digital Shadow"</h3>
+      </div>
+    </div>
+    
+    <div class="info-grid">
+      <div class="label">Full Name:</div>
+      <div class="value">Kamini Javeed</div>
+      
+      <div class="label">Father:</div>
+      <div class="value">Muhammad Javeed</div>
+      
+      <div class="label">CNIC:</div>
+      <div class="value sensitive">42201-7654321-9</div>
+      
+      <div class="label">DOB:</div>
+      <div class="value">22-11-1998</div>
+      
+      <div class="label">Cast:</div>
+      <div class="value">Rajput</div>
+      
+      <div class="label">Home Base:</div>
+      <div class="value location" id="location">Lahore, Pakistan</div>
+      
+      <div class="label">Phone:</div>
+      <div class="value sensitive">+92 300 7654321</div>
+      
+      <div class="label">Email:</div>
+      <div class="value">kamini.j@protonmail.com</div>
+    </div>
+    
+    <div class="live-data">
+      <h4>LIVE TRACKING DATA</h4>
+      <div class="info-grid">
+        <div class="label">Current Location:</div>
+        <div class="value" id="currentLocation">Acquiring...</div>
+        
+        <div class="label">Coordinates:</div>
+        <div class="value" id="currentCoords">31.5204° N, 74.3587° E</div>
+        
+        <div class="label">Speed:</div>
+        <div class="value" id="currentSpeed">0 km/h</div>
+        
+        <div class="label">Accuracy:</div>
+        <div class="value" id="currentAccuracy">± 5 meters</div>
+        
+        <div class="label">Last Movement:</div>
+        <div class="value" id="lastMovement">Just now</div>
+      </div>
+    </div>
+    
+    <div class="social-section">
+      <div class="info-grid">
+        <div class="label">Facebook:</div>
+        <div class="value">fb.com/kamini.javeed</div>
+        
+        <div class="label">Instagram:</div>
+        <div class="value">@kamini_jvd</div>
+        
+        <div class="label">TikTok:</div>
+        <div class="value">@digital.shadow</div>
+        
+        <div class="label">Twitter:</div>
+        <div class="value">@kamini_ghost</div>
+      </div>
+      
+      <div class="social-links">
+        <a href="#">GitHub</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">Telegram</a>
+        <a href="#">DarkWeb</a>
+        <a href="#">HackForums</a>
+      </div>
+    </div>
+    
+    <div class="gps-coords" id="gpsCoords">GPS: 31.5204° N, 74.3587° E</div>
+    <div class="timestamp" id="timestamp">LAST UPDATED: 17-04-2025 23:59:59</div>
+  </div>
+
+  <script>
+    // Kamini's movement path in Lahore
+    const lahorePath = [
+      { lat: 31.5204, lng: 74.3587, place: "Home Base", speed: "0 km/h" },
+      { lat: 31.5220, lng: 74.3600, place: "Moving NW", speed: "5 km/h" },
+      { lat: 31.5235, lng: 74.3625, place: "Commercial Area", speed: "12 km/h" },
+      { lat: 31.5250, lng: 74.3650, place: "Main Road", speed: "25 km/h" },
+      { lat: 31.5265, lng: 74.3675, place: "Traffic Light", speed: "0 km/h" },
+      { lat: 31.5280, lng: 74.3700, place: "Accelerating", speed: "18 km/h" },
+      { lat: 31.5295, lng: 74.3725, place: "Tech District", speed: "15 km/h" }
+    ];
+
+    let currentStep = 0;
+    const marker = document.getElementById('targetMarker');
+    const path = document.getElementById('targetPath');
+    const map = document.getElementById('map');
+    const ctx = path.getContext('2d');
+    
+    // Set canvas size
+    path.width = window.innerWidth;
+    path.height = window.innerHeight;
+    
+    function updateLocation() {
+      currentStep = (currentStep + 1) % lahorePath.length;
+      const loc = lahorePath[currentStep];
+      
+      // Update displayed data
+      document.getElementById('currentLocation').textContent = loc.place;
+      document.getElementById('currentCoords').textContent = `${loc.lat.toFixed(4)}° N, ${loc.lng.toFixed(4)}° E`;
+      document.getElementById('currentSpeed').textContent = loc.speed;
+      document.getElementById('gpsCoords').textContent = `GPS: ${loc.lat.toFixed(4)}° N, ${loc.lng.toFixed(4)}° E`;
+      document.getElementById('lastMovement').textContent = "Just now";
+      
+      // Calculate screen position
+      const x = ((loc.lng - 74.35) * 20000) + (window.innerWidth/2);
+      const y = ((31.53 - loc.lat) * 20000) + (window.innerHeight/2);
+      
+      // Move marker
+      marker.style.left = `${x}px`;
+      marker.style.top = `${y}px`;
+      
+      // Draw path
+      if (currentStep === 0) {
+        ctx.clearRect(0, 0, path.width, path.height);
+        ctx.beginPath();
+        ctx.strokeStyle = '#f00';
+        ctx.lineWidth = 2;
+        ctx.moveTo(x + 15, y + 30);
+      } else {
+        ctx.lineTo(x + 15, y + 30);
+        ctx.stroke();
+      }
+      
+      // Update map background
+      map.style.backgroundPosition = `${50 - (loc.lng - 74.3587)*500}% ${50 - (loc.lat - 31.5204)*500}%`;
+      
+      // Randomize accuracy
+      const accuracy = ['± 3 meters', '± 5 meters', '± 8 meters'];
+      document.getElementById('currentAccuracy').textContent = 
+        accuracy[Math.floor(Math.random() * accuracy.length)];
+    }
+
+    // Initialize typing effect
+    const elements = document.querySelectorAll('.value');
+    elements.forEach(el => {
+      const originalText = el.textContent;
+      el.textContent = '';
+      
+      let i = 0;
+      const typing = setInterval(() => {
+        if (i < originalText.length) {
+          el.textContent += originalText.charAt(i);
+          i++;
+        } else {
+          clearInterval(typing);
+        }
+      }, 20 + Math.random() * 50);
+    });
+    
+    // Update timestamp every second
+    function updateTime() {
+      const now = new Date();
+      const dateStr = now.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/\//g, '-');
+      
+      document.getElementById('timestamp').textContent = `LAST UPDATED: ${dateStr}`;
+    }
+    
+    setInterval(updateTime, 1000);
+    updateTime();
+    
+    // Make sensitive info blink
+    const sensitive = document.querySelectorAll('.sensitive');
+    setInterval(() => {
+      sensitive.forEach(el => {
+        el.style.visibility = el.style.visibility === 'hidden' ? 'visible' : 'hidden';
+      });
+    }, 500);
+    
+    // Initialize location tracking
+    updateLocation();
+    setInterval(updateLocation, 3000);
+    
+    // Simulate battery drain
+    let battery = 87;
+    setInterval(() => {
+      battery = Math.max(10, battery - 1);
+      document.querySelector('.battery').textContent = `${battery}%`;
+      if (battery < 20) {
+        document.querySelector('.battery').style.color = '#f00';
+      }
+    }, 15000);
+    
+    // Simulate satellite signal fluctuation
+    setInterval(() => {
+      const signals = ['GPS ACTIVE', 'SIGNAL WEAK', 'TRACKING', '3 SATELLITES'];
+      document.querySelector('.signal').textContent = `🛰️ ${signals[Math.floor(Math.random() * signals.length)]}`;
+    }, 3000);
+  </script>
+</body>
+</html>

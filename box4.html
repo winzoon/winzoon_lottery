@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Lottery - Golak Lottery</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #6c00ff;
+      --secondary-color: #00bfff;
+      --success-color: #28a745;
+      --danger-color: #dc3545;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .payment-card {
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: none;
+      overflow: hidden;
+    }
+    
+    .payment-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    
+    .payment-body {
+      padding: 2rem;
+    }
+    
+    .form-label {
+      font-weight: 600;
+      color: #495057;
+    }
+    
+    .form-control {
+      border-radius: 8px;
+      padding: 12px 15px;
+      border: 1px solid #ced4da;
+      transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.25rem rgba(108, 0, 255, 0.25);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      border: none;
+      padding: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(108, 0, 255, 0.3);
+    }
+    
+    .otp-input {
+      letter-spacing: 10px;
+      font-size: 1.5rem;
+      text-align: center;
+      padding: 10px;
+    }
+    
+    .payment-method {
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .payment-method:hover {
+      border-color: var(--primary-color);
+      background-color: #f8f9fa;
+    }
+    
+    .payment-method.selected {
+      border-color: var(--primary-color);
+      background-color: #e7f1ff;
+    }
+    
+    .payment-method i {
+      font-size: 1.5rem;
+      margin-right: 10px;
+      color: var(--primary-color);
+    }
+    
+    .lottery-item-badge {
+      font-size: 0.9rem;
+      padding: 0.4rem 0.8rem;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .success-message {
+      background-color: rgba(40, 167, 69, 0.1);
+      border-left: 4px solid var(--success-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="payment-card">
+          <div class="payment-header">
+            <h3><i class="fas fa-ticket-alt me-2"></i> Join Winzoon Lottery</h3>
+            <span class="badge lottery-item-badge">Box 4 -Motorbike Lottery</span>
+          </div>
+          
+          <div class="payment-body">
+            <!-- Step 1: Phone Number -->
+            <div id="step1">
+              <div class="mb-4 text-center">
+                <h4>Enter Your Mobile Number</h4>
+                <p class="text-muted">We'll send a verification code to this number</p>
+              </div>
+              
+              <div class="mb-3">
+                <label for="phone" class="form-label">Mobile Number</label>
+                <div class="input-group">
+                  <span class="input-group-text">+92</span>
+                  <input type="tel" class="form-control" id="phone" placeholder="3XXXXXXXXX" maxlength="10">
+                </div>
+                <small class="text-muted">Enter your 11-digit mobile number (e.g. 3123456789)</small>
+              </div>
+              
+              <button class="btn btn-primary w-100 mt-2" onclick="validatePhone()">
+                Continue <i class="fas fa-arrow-right ms-2"></i>
+              </button>
+            </div>
+            
+            <!-- Step 2: Payment Method -->
+            <div id="step2" style="display: none;">
+              <div class="mb-4 text-center">
+                <h4>Select Payment Method</h4>
+                <p class="text-muted">Entry Fee: <span class="fw-bold text-danger">Rs. 50</span></p>
+              </div>
+              
+              <div class="payment-method" onclick="selectPaymentMethod('easypaisa')">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-mobile-alt"></i>
+                  <div>
+                    <h5 class="mb-1">Easypaisa</h5>
+                    <p class="mb-0 text-muted">Mobile wallet payment</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="payment-method" onclick="selectPaymentMethod('jazzcash')">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-wallet"></i>
+                  <div>
+                    <h5 class="mb-1">JazzCash</h5>
+                    <p class="mb-0 text-muted">Mobile wallet payment</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="payment-method" onclick="selectPaymentMethod('bank')">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-university"></i>
+                  <div>
+                    <h5 class="mb-1">Bank Transfer</h5>
+                    <p class="mb-0 text-muted">Direct bank payment</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="payment-method" onclick="selectPaymentMethod('nayapay')">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-credit-card"></i>
+                  <div>
+                    <h5 class="mb-1">NayaPay</h5>
+                    <p class="mb-0 text-muted">Digital payment</p>
+                  </div>
+                </div>
+              </div>
+              
+              <button class="btn btn-primary w-100 mt-3" id="proceedBtn" disabled onclick="proceedToOTP()">
+                Proceed to Payment <i class="fas fa-lock ms-2"></i>
+              </button>
+            </div>
+            
+            <!-- Step 3: OTP Verification -->
+            <div id="step3" style="display: none;">
+              <div class="mb-4 text-center">
+                <h4>Verify Your Identity</h4>
+                <p class="text-muted">Enter the 6-digit code sent to <span id="displayPhone" class="fw-bold"></span></p>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Verification Code</label>
+                <input type="text" class="form-control otp-input" id="otp" maxlength="6" placeholder="••••••">
+                <small class="text-muted">Haven't received code? <a href="#" onclick="resendOTP()">Resend OTP</a></small>
+              </div>
+              
+              <button class="btn btn-primary w-100" onclick="verifyOTP()">
+                Verify & Complete Payment <i class="fas fa-check-circle ms-2"></i>
+              </button>
+            </div>
+            
+            <!-- Step 4: Success Message -->
+            <div id="step4" style="display: none;">
+              <div class="p-4 text-center success-message">
+                <div class="mb-4">
+                  <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h4 class="mb-3">Payment Successful!</h4>
+                <p class="mb-3">Rs. 100 has been deducted from your <span id="paymentMethodDisplay" class="fw-bold"></span> account.</p>
+                <p class="mb-4">🎉 You have successfully joined Box 4 - Motorbike Lottery!</p>
+                <button class="btn btn-outline-primary" onclick="window.close()">
+                  Close <i class="fas fa-times ms-2"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let currentStep = 1;
+    let selectedPaymentMethod = '';
+    let generatedOTP = '';
+    let userPhone = '';
+    
+    function validatePhone() {
+      const phoneInput = document.getElementById('phone');
+      const phone = phoneInput.value.trim();
+      
+      // Pakistani mobile number validation (03XXXXXXXXX)
+      if (!phone || !/^3\d{9}$/.test(phone)) {
+        alert('Please enter a valid 11-digit Pakistani mobile number (e.g. 3123456789)');
+        phoneInput.focus();
+        return;
+      }
+      
+      userPhone = phone;
+      document.getElementById('displayPhone').textContent = `+92${phone}`;
+      showStep(2);
+    }
+    
+    function selectPaymentMethod(method) {
+      selectedPaymentMethod = method;
+      
+      // Remove selected class from all methods
+      document.querySelectorAll('.payment-method').forEach(el => {
+        el.classList.remove('selected');
+      });
+      
+      // Add selected class to clicked method
+      event.currentTarget.classList.add('selected');
+      
+      // Enable proceed button
+      document.getElementById('proceedBtn').disabled = false;
+    }
+    
+    function proceedToOTP() {
+      if (!selectedPaymentMethod) {
+        alert('Please select a payment method');
+        return;
+      }
+      
+      // Generate random 6-digit OTP
+      generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // In a real app, you would send this OTP to the user's phone via SMS
+      console.log(`OTP for +92${userPhone}: ${generatedOTP}`);
+      alert(`Demo OTP: ${generatedOTP}\n(In real app, this would be sent via SMS)`);
+      
+      showStep(3);
+    }
+    
+    function verifyOTP() {
+      const enteredOTP = document.getElementById('otp').value.trim();
+      
+      if (!enteredOTP || enteredOTP.length !== 6) {
+        alert('Please enter a valid 6-digit OTP');
+        return;
+      }
+      
+      if (enteredOTP === generatedOTP) {
+        // Show payment method in success message
+        const methodNames = {
+          'easypaisa': 'Easypaisa',
+          'jazzcash': 'JazzCash',
+          'bank': 'Bank Account',
+          'nayapay': 'NayaPay'
+        };
+        document.getElementById('paymentMethodDisplay').textContent = methodNames[selectedPaymentMethod];
+        
+        showStep(4);
+      } else {
+        alert('Incorrect OTP. Please try again.');
+      }
+    }
+    
+    function resendOTP() {
+      // Generate new OTP
+      generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      console.log(`New OTP for +92${userPhone}: ${generatedOTP}`);
+      alert(`New OTP: ${generatedOTP}\n(In real app, this would be sent via SMS)`);
+      
+      // Clear OTP input
+      document.getElementById('otp').value = '';
+      document.getElementById('otp').focus();
+    }
+    
+    function showStep(step) {
+      // Hide all steps
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('step3').style.display = 'none';
+      document.getElementById('step4').style.display = 'none';
+      
+      // Show selected step
+      document.getElementById(`step${step}`).style.display = 'block';
+      currentStep = step;
+    }
+  </script>
+</body>
+</html>
